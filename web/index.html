@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111827"><title>AHRE | Prueba de Mercado Pago</title><link rel="stylesheet" href="/styles.css"></head>
+<body><main class="shell">
+<header class="topbar"><div class="brand-mark">A</div><div><p class="eyebrow">AHRE · entorno de pruebas</p><h1>Consulta de pagos</h1></div><span class="readonly"><i></i> Solo lectura</span></header>
+<section class="intro"><div><p class="eyebrow">Mercado Pago API</p><h2>Probemos una consulta chica</h2><p>La web le pide a n8n hasta dos pagos recientes y muestra solo los campos necesarios para compararlos con el Excel.</p></div><div class="limit-card"><label for="limit">Cantidad máxima</label><select id="limit"><option value="1">1 resultado</option><option value="2" selected>2 resultados</option></select><button id="search" type="button">Buscar pagos <span>→</span></button></div></section>
+<section class="notice"><b>i</b><p><strong>Alcance:</strong> <code>/v1/payments/search</code> consulta pagos. No asumimos que incluya todos los movimientos del Excel.</p></section>
+<section class="results-card"><div class="results-head"><div><p class="eyebrow">Resultado</p><h2 id="result-title">Todavía no hicimos la consulta</h2></div><span id="count" class="count">—</span></div><div id="message" class="message" role="status">Elegí 1 o 2 y tocá “Buscar pagos”.</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Fecha</th><th>Estado</th><th>Importe</th><th>Operación</th><th>Medio</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<footer><span>La búsqueda no crea ni modifica pagos.</span><span>La respuesta se muestra en esta sesión y no se guarda en la web.</span></footer>
+</main><script src="/app.js" defer></script></body></html>

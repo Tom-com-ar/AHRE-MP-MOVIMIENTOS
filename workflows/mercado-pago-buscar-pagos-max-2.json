@@ -1,0 +1,166 @@
+{
+  "name": "AHRE - Mercado Pago - Buscar hasta 2 pagos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ahre-mp-search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700001",
+      "name": "Entrada desde la web",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "ahre-mp-search"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.body ?? $json;\nconst requested = Number(input.limit ?? 2);\nconst limit = requested === 1 ? 1 : 2;\nreturn [{ json: { limit } }];"
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700002",
+      "name": "Limitar la búsqueda a 1 o 2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.mercadopago.com/v1/payments/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "={{ $json.limit }}"
+            },
+            {
+              "name": "offset",
+              "value": "0"
+            },
+            {
+              "name": "sort",
+              "value": "date_created"
+            },
+            {
+              "name": "criteria",
+              "value": "desc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700003",
+      "name": "Consultar pagos en Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "notesInFlow": true,
+      "notes": "Crear una credencial Header Auth: Name = Authorization; Value = Bearer <Access Token>. Asignarla a este nodo. No pegar el token en la web ni en el workflow exportado."
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $json;\nconst payments = Array.isArray(response.results) ? response.results.slice(0, 2) : [];\nconst safeResults = payments.map((p) => ({ id: p.id ?? null, date_created: p.date_created ?? null, date_approved: p.date_approved ?? null, status: p.status ?? null, status_detail: p.status_detail ?? null, transaction_amount: p.transaction_amount ?? null, currency_id: p.currency_id ?? null, operation_type: p.operation_type ?? null, payment_type_id: p.payment_type_id ?? null, payment_method_id: p.payment_method_id ?? null }));\nreturn [{ json: { ok: true, total: response.paging?.total ?? safeResults.length, shown: safeResults.length, results: safeResults } }];"
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700004",
+      "name": "Dejar solo campos útiles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700005",
+      "name": "Devolver respuesta a la web",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Entrada desde la web": {
+      "main": [
+        [
+          {
+            "node": "Limitar la búsqueda a 1 o 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limitar la búsqueda a 1 o 2": {
+      "main": [
+        [
+          {
+            "node": "Consultar pagos en Mercado Pago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar pagos en Mercado Pago": {
+      "main": [
+        [
+          {
+            "node": "Dejar solo campos útiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dejar solo campos útiles": {
+      "main": [
+        [
+          {
+            "node": "Devolver respuesta a la web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Argentina/Buenos_Aires"
+  },
+  "versionId": "7b5478c0-37d3-4f31-9f03-588c00000001",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
