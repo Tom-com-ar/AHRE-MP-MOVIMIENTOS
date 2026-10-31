@@ -42,6 +42,8 @@ La página permite seleccionar `1`, `5`, `10`, `25` o `50` pagos por tanda. Merc
 
 El número total informado por `paging.total` es la cantidad de pagos que coinciden con la búsqueda; cada tanda trae como máximo el límite elegido. Esto no significa que una sola llamada devuelva todos los pagos. Una búsqueda nueva empieza desde el primer resultado y limpia la lista anterior.
 
+Para probar la frecuencia, la web incluye una consulta automática configurable desde 30 segundos hasta 30 días. Al iniciarla, hace una consulta inmediata y muestra una cuenta regresiva hasta la próxima. Cada revisión compara los 50 pagos más recientes con los que ya están visibles y agrega arriba los que reconoce como nuevos. Este modo de prueba funciona mientras la pestaña permanezca abierta; al cerrarla, el temporizador se detiene y la lista no se guarda. Todavía no es la programación automática permanente de n8n.
+
 La búsqueda de pagos no representa necesariamente todos los movimientos de cuenta del Excel o del reporte de Mercado Pago. Documentación: [Gestión de pagos recibidos](https://www.mercadopago.com.ar/developers/es/docs/subscriptions/additional-content/payment-management) y [Referencia de búsqueda de pagos](https://www.mercadopago.com.ar/developers/es/reference/online-payments/subscriptions/search-payments/get).
 
 ## Normalización del movimiento

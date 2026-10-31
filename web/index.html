@@ -35,6 +35,22 @@
         </select>
         <button id="search" type="button">Buscar pagos <span>→</span></button>
         <p class="limit-hint">Cada tanda hace una consulta. Se pueden cargar más sin borrar los resultados anteriores.</p>
+        <div class="auto-poll">
+          <label for="auto-interval">Consulta automática para pruebas</label>
+          <p class="limit-hint">Elegí cada cuánto revisar los 50 pagos más recientes. Mínimo: 30 segundos.</p>
+          <div class="interval-controls">
+            <input id="auto-interval" type="number" min="1" step="1" value="30" aria-label="Tiempo entre consultas">
+            <select id="auto-unit" aria-label="Unidad de tiempo">
+              <option value="seconds" selected>segundos</option>
+              <option value="minutes">minutos</option>
+              <option value="hours">horas</option>
+              <option value="days">días</option>
+            </select>
+          </div>
+          <button id="auto-toggle" class="secondary" type="button">Iniciar consulta automática</button>
+          <p id="auto-countdown" class="auto-countdown" role="timer" aria-live="off" hidden></p>
+          <p id="auto-status" class="auto-status" role="status">Detenida. Funciona mientras esta pestaña esté abierta.</p>
+        </div>
       </div>
     </section>
 
@@ -75,7 +91,7 @@
 
     <footer>
       <span>La búsqueda no crea ni modifica pagos.</span>
-      <span>La respuesta se muestra en esta sesión y no se guarda en la web.</span>
+      <span>Los resultados y el temporizador se mantienen solo mientras esta pestaña está abierta.</span>
     </footer>
   </main>
   <script src="/app.js" defer></script>
