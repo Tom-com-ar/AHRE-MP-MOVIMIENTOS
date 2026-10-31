@@ -38,9 +38,9 @@ La web y n8n se comunican por la red privada de Compose `testnet`. La carpeta `w
 
 ## Qué consulta y cuánto trae
 
-La página permite seleccionar `1`, `5`, `10`, `25` o `50` pagos por página. Mercado Pago documenta un máximo de **50 registros por consulta**; el `offset` permite avanzar en los resultados hasta el límite documentado de `10000`. La referencia de búsqueda indica que devuelve pagos de los últimos 12 meses. Si hay más de 50 resultados, la web los recorre página por página, con una consulta al pulsar «Anterior» o «Siguiente».
+La página permite seleccionar `1`, `5`, `10`, `25` o `50` pagos por tanda. Mercado Pago documenta un máximo de **50 registros por consulta**; el `offset` permite avanzar en los resultados hasta el límite documentado de `10000`. La referencia de búsqueda indica que devuelve pagos de los últimos 12 meses. Al pulsar «Cargar más», la web consulta la tanda siguiente y la agrega debajo de las anteriores, sin reemplazarlas.
 
-El número total informado por `paging.total` es la cantidad de pagos que coinciden con la búsqueda; cada página trae como máximo el límite elegido. Esto no significa que una sola llamada devuelva todos los pagos.
+El número total informado por `paging.total` es la cantidad de pagos que coinciden con la búsqueda; cada tanda trae como máximo el límite elegido. Esto no significa que una sola llamada devuelva todos los pagos. Una búsqueda nueva empieza desde el primer resultado y limpia la lista anterior.
 
 La búsqueda de pagos no representa necesariamente todos los movimientos de cuenta del Excel o del reporte de Mercado Pago. Documentación: [Gestión de pagos recibidos](https://www.mercadopago.com.ar/developers/es/docs/subscriptions/additional-content/payment-management) y [Referencia de búsqueda de pagos](https://www.mercadopago.com.ar/developers/es/reference/online-payments/subscriptions/search-payments/get).
 
@@ -65,7 +65,7 @@ El medio de pago se muestra con una etiqueta en español a partir de `payment_ty
 3. Un nodo de código valida `limit` (1–50) y `offset` (0–10000).
 4. HTTP Request llama a `GET https://api.mercadopago.com/v1/payments/search` con la credencial Header Auth.
 5. Un nodo normaliza tipo y medio de pago, conserva los valores originales y prepara campos seguros para la página.
-6. Respond to Webhook devuelve los resultados y los datos de paginación.
+6. Respond to Webhook devuelve los resultados y los datos de paginación. La web conserva los resultados ya cargados y agrega los nuevos sin duplicar IDs.
 
 ## Instalación y acceso
 
@@ -109,7 +109,7 @@ No se incluye ningún token en este paquete. No lo compartas en capturas, chats 
 - El primer acceso a la web dio 403 por permisos de la carpeta `web`; se corrigió el acceso de lectura y recorrido para Nginx.
 - La aplicación AHRE mostrada en Developers tiene Checkout API, API Pagos y permisos `read`, `offline access` y `write` habilitados.
 - La última ejecución compartida falló con `401 — Unauthorized use of live credentials`. El flujo todavía no confirmó una respuesta válida de pagos. Los cambios de paginación y normalización no corrigen ese error de credenciales.
-- La web antes dejaba elegir 1 o 2. Esta versión del paquete permite elegir hasta 50 y paginar, pero el nuevo workflow debe importarse y asociarse a la credencial de n8n.
+- La web permite elegir hasta 50 pagos por tanda y agregarlos progresivamente con «Cargar más», pero el nuevo workflow debe importarse y asociarse a la credencial de n8n.
 
 ## Actualizar desde esta versión
 

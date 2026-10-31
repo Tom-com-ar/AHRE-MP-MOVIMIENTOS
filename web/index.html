@@ -22,10 +22,10 @@
       <div>
         <p class="eyebrow">Mercado Pago API</p>
         <h2>Busquemos pagos recientes</h2>
-        <p>Elegí cuántos resultados ver por página. La API permite hasta 50 por consulta y podemos avanzar por páginas.</p>
+        <p>Elegí cuántos resultados traer por tanda. Al cargar más, se agregan debajo y los anteriores quedan visibles.</p>
       </div>
       <div class="limit-card">
-        <label for="limit">Resultados por página</label>
+        <label for="limit">Resultados por tanda</label>
         <select id="limit">
           <option value="1">1 resultado</option>
           <option value="5">5 resultados</option>
@@ -34,7 +34,7 @@
           <option value="50">50 resultados (máximo)</option>
         </select>
         <button id="search" type="button">Buscar pagos <span>→</span></button>
-        <p class="limit-hint">Cada página hace una consulta. No se descargan todos los resultados de golpe.</p>
+        <p class="limit-hint">Cada tanda hace una consulta. Se pueden cargar más sin borrar los resultados anteriores.</p>
       </div>
     </section>
 
@@ -67,10 +67,9 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
-      <nav id="pagination" class="pagination" aria-label="Paginación" hidden>
-        <button id="previous" type="button" disabled>← Anterior</button>
-        <span id="page-info">Página 1 de 1</span>
-        <button id="next" type="button" disabled>Siguiente →</button>
+      <nav id="pagination" class="pagination" aria-label="Cargar más resultados" hidden>
+        <span id="page-info">0 cargados</span>
+        <button id="load-more" type="button" disabled>Cargar más</button>
       </nav>
     </section>
 
