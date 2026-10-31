@@ -97,6 +97,17 @@ function fmtMoney(value, currency) {
   }
 }
 
+function fmtSignedMoney(value, currency, direction) {
+  if (value === null || value === undefined) return '—';
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return fmtMoney(value, currency);
+
+  const amount = fmtMoney(Math.abs(numericValue), currency);
+  if (direction === 'in') return `+${amount}`;
+  if (direction === 'out') return `−${amount}`;
+  return amount;
+}
+
 function addCell(row, value, className = '') {
   const cell = document.createElement('td');
   cell.textContent = value ?? '—';
@@ -114,8 +125,15 @@ function createPaymentRow(payment) {
   if (payment.status === 'approved') status.classList.add('approved');
   if (payment.status === 'rejected') status.classList.add('rejected');
 
-  addCell(row, fmtMoney(payment.transaction_amount, payment.currency_id), 'money');
+  const amount = addCell(
+    row,
+    fmtSignedMoney(payment.transaction_amount, payment.currency_id, payment.amount_direction),
+    'money',
+  );
+  if (payment.amount_direction === 'in') amount.classList.add('incoming');
+  if (payment.amount_direction === 'out') amount.classList.add('outgoing');
   addCell(row, payment.movement_type || 'Sin dato');
+  addCell(row, payment.counterpart_label || '—');
   addCell(row, payment.payment_method_normalized || 'Sin dato');
   return row;
 }
