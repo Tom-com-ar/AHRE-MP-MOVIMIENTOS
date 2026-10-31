@@ -1,0 +1,166 @@
+{
+  "name": "AHRE - Mercado Pago - Buscar pagos paginados y normalizados",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ahre-mp-search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700001",
+      "name": "Entrada desde la web",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "ahre-mp-search"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.body ?? $json;\nconst requestedLimit = Number(input.limit ?? 10);\nconst requestedOffset = Number(input.offset ?? 0);\n\nif (!Number.isInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 50) {\n  throw new Error('El límite debe ser un número entre 1 y 50.');\n}\nif (!Number.isInteger(requestedOffset) || requestedOffset < 0 || requestedOffset > 10000) {\n  throw new Error('La posición debe ser un número entre 0 y 10000.');\n}\n\nreturn [{ json: { limit: requestedLimit, offset: requestedOffset } }];"
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700002",
+      "name": "Validar límite y página desde la web",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.mercadopago.com/v1/payments/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "={{ $json.limit }}"
+            },
+            {
+              "name": "offset",
+              "value": "={{ $json.offset }}"
+            },
+            {
+              "name": "sort",
+              "value": "date_created"
+            },
+            {
+              "name": "criteria",
+              "value": "desc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700003",
+      "name": "Consultar pagos en Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "notesInFlow": true,
+      "notes": "Crear una credencial Header Auth: Name = Authorization; Value = Bearer <Access Token>. Asignarla a este nodo. No pegar el token en la web ni en el workflow exportado."
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $json;\nconst payments = Array.isArray(response.results) ? response.results : [];\n\nconst movementLabels = {\n  regular_payment: 'Pago',\n  pos_payment: 'Pago presencial',\n  recurring_payment: 'Pago recurrente',\n};\nconst paymentTypeLabels = {\n  credit_card: 'Tarjeta de crédito',\n  debit_card: 'Tarjeta de débito',\n  prepaid_card: 'Tarjeta prepaga',\n  account_money: 'Dinero en cuenta',\n  ticket: 'Efectivo o cupón',\n  bank_transfer: 'Transferencia bancaria',\n  atm: 'Cajero automático',\n  digital_wallet: 'Billetera digital',\n};\n\nfunction normalize(raw, labels, fallback) {\n  const value = typeof raw === 'string' ? raw.trim() : '';\n  return labels[value] ?? (value ? fallback + ' (' + value + ')' : 'Sin dato');\n}\n\nconst safeResults = payments.map((payment) => {\n  const operationType = typeof payment.operation_type === 'string'\n    ? payment.operation_type.trim()\n    : '';\n  const paymentType = typeof payment.payment_type_id === 'string'\n    ? payment.payment_type_id.trim()\n    : '';\n  const paymentMethod = typeof payment.payment_method_id === 'string'\n    ? payment.payment_method_id.trim()\n    : '';\n  const paymentTypeLabel = normalize(paymentType, paymentTypeLabels, 'Otro medio');\n\n  return {\n    id: payment.id ?? null,\n    date_created: payment.date_created ?? null,\n    date_approved: payment.date_approved ?? null,\n    status: payment.status ?? null,\n    status_detail: payment.status_detail ?? null,\n    transaction_amount: payment.transaction_amount ?? null,\n    currency_id: payment.currency_id ?? null,\n    movement_type: normalize(operationType, movementLabels, 'Otro movimiento'),\n    operation_type_raw: operationType || null,\n    payment_method_normalized: paymentMethod\n      ? paymentTypeLabel + ' · ' + paymentMethod\n      : paymentTypeLabel,\n    payment_type_id_raw: paymentType || null,\n    payment_method_id_raw: paymentMethod || null,\n  };\n});\n\nconst total = Number(response.paging?.total);\nconst responseLimit = Number(response.paging?.limit);\nconst responseOffset = Number(response.paging?.offset);\n\nreturn [{\n  json: {\n    ok: true,\n    total: Number.isFinite(total) ? total : safeResults.length,\n    limit: Number.isFinite(responseLimit) ? responseLimit : safeResults.length,\n    offset: Number.isFinite(responseOffset) ? responseOffset : 0,\n    shown: safeResults.length,\n    results: safeResults,\n  },\n}];"
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700004",
+      "name": "Normalizar movimiento y dejar campos útiles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e845c000-1ea2-4de5-9aba-e3eaa6700005",
+      "name": "Devolver respuesta a la web",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Entrada desde la web": {
+      "main": [
+        [
+          {
+            "node": "Validar límite y página desde la web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar pagos en Mercado Pago": {
+      "main": [
+        [
+          {
+            "node": "Normalizar movimiento y dejar campos útiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar límite y página desde la web": {
+      "main": [
+        [
+          {
+            "node": "Consultar pagos en Mercado Pago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar movimiento y dejar campos útiles": {
+      "main": [
+        [
+          {
+            "node": "Devolver respuesta a la web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Argentina/Buenos_Aires"
+  },
+  "versionId": "7b5478c0-37d3-4f31-9f03-588c00000001",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
